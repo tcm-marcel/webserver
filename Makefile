@@ -1,3 +1,5 @@
+# (c) Marcel Kost 2020
+
 CC := clang++-9
 CFLAGS := -Wall -g --stdlib=libc++ --std=c++2a # -Werror -Wextra
 LDFLAGS := --stdlib=libc++ --std=c++2a

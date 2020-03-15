@@ -1,3 +1,5 @@
+// (c) Marcel Kost 2020
+
 #pragma once
 
 #include <stdexcept>
