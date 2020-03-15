@@ -17,9 +17,8 @@ int main(int argc, char* argv[])
   try {
     serverSocket.bindAndListen(std::stoi(argv[1]));
     
-    while(1) {
+    while(true) {
       auto clientConnection = serverSocket.accept();
-      std::cout << "accepted" << std::endl;
       
       try {
         auto requestHeader = clientConnection.readRequestHeader();
@@ -29,11 +28,26 @@ int main(int argc, char* argv[])
           clientConnection.sendEmptyResponse(errorHeader);
         }
         
-        std::cout << requestHeader.path << std::endl;
+        webserver::HttpResponseHeader responseHeader;
+        
+        if (requestHeader.path == "/") {
+          // Handle request
+          responseHeader = webserver::HttpResponseHeader{200, "OK", {}};
+          std::string content = "Hello World!\n";
+          clientConnection.sendResponse(responseHeader, content);
+        } else {
+          responseHeader = webserver::HttpResponseHeader{404, "Not Found", {}};
+          clientConnection.sendEmptyResponse(responseHeader);
+        }
+        
+        // Print request and response to console
+        std::cout << static_cast<std::string>(requestHeader) << " - " << static_cast<std::string>(responseHeader) << std::endl;
+        
       } catch (webserver::HttpError& error) {
+        std::cout << static_cast<std::string>(error) << std::endl;
         clientConnection.sendEmptyResponse(error);
       } catch (webserver::ClientConnection::NetworkError& error) {
-        std::cerr << error.what() << std::endl;
+        std::cout << error.what() << std::endl;
       }
     }
   } catch (webserver::ServerSocket::NetworkError& error) {

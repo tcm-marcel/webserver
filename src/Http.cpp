@@ -13,5 +13,26 @@ HttpRequestHeader::Method httpMethodFromString(std::string& input)
 }
 
 
+std::string httpMethodToString(HttpRequestHeader::Method method)
+{
+  if (method == HttpRequestHeader::Method::GET) return "GET";
+  if (method == HttpRequestHeader::Method::HEAD) return "HEAD";;
+  if (method == HttpRequestHeader::Method::POST) return "POST";;
+  return "Unknown";
+}
+
+
+HttpRequestHeader::operator std::string()
+{
+  return httpMethodToString(method) + " " + path;
+}
+
+
+HttpResponseHeader::operator std::string()
+{
+  return std::to_string(statusCode) + " " + statusText;
+}
+
+
 } // namespace webserver
 

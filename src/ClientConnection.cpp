@@ -8,87 +8,117 @@
 namespace webserver {
 
 
-void ClientConnection::sendResponse(HttpResponseHeader& header, std::string& content)
-{
-  sendResponseHeader(header);
-  output_stream_ << content;
-  flushAndCloseConnection();
-}
-
-
 HttpRequestHeader ClientConnection::readRequestHeader()
 {
+  input_ = receive();
+  input_stream_ = std::istringstream(input_);
+  
   HttpRequestHeader header;
   std::string method;
   std::string protocolVersion;
   
-  // Get Request Line
-  std::istringstream input_stream(readLine());
-  
   // Read Request Line
-  input_stream >> method >> header.path >> protocolVersion;
+  input_stream_ >> method >> header.path >> protocolVersion;
   
   header.method = httpMethodFromString(method);
   
   if (header.method == HttpRequestHeader::Method::Unknown)
     throw HttpError{501, "Not Implemented", {}};
   
-  if (protocolVersion != "HTTP/1.0")
+  if (protocolVersion != protocolVersion)
     throw HttpError{505, "HTTP Version Not Supported", {}};
-  
-  std::cout << method << header.path << std::endl;
   
   return header;
 }
 
 
-std::string ClientConnection::readLine()
+void ClientConnection::sendResponse(HttpResponseHeader& header, std::string& content)
 {
-  const size_t chunk_size = 64;
-  std::string buffer = std::move(input_buffer_);
+  std::vector<std::string> additional_headers{
+    "Content-Length: " + std::to_string(content.size()),
+    "Content-Type: text/plain"
+  };
   
-  while(1) {
-    const std::size_t chunk_begin_index = buffer.size();
-    buffer.resize(buffer.size() + chunk_size);
+  sendResponseHeader(header, additional_headers);
+  send(content);
+  flushAndCloseConnection();
+}
+
+
+void ClientConnection::sendEmptyResponse(HttpResponseHeader& header)
+{
+  std::vector<std::string> additional_headers{"Content-Length: 0"};
+  
+  sendResponseHeader(header, additional_headers);
+  flushAndCloseConnection();
+}
+
+
+std::string ClientConnection::receive() const
+{
+  const size_t buffer_size = 1024;
+  std::string buffer(buffer_size, '\0');
+  std::string input;
+  
+  while(true) {
+    auto read_size = read(connection_fd_, buffer.data(), buffer_size);
     
-    auto status = read(connection_fd_, &buffer[chunk_begin_index], chunk_size);
-    
-    if (status < 0) {
+    if (read_size < 0) {
       throw NetworkError(std::string("Error reading data from client socket: ") + std::strerror(errno));
-    } else if (status == 0) {
-      throw NetworkError(std::string("Client socket closed unexpectetly: ") + std::strerror(errno));
+    } else if (read_size == 0) {
+      // Socket closed
+      return input;
     }
     
-    std::size_t newline_index = buffer.find("\n", chunk_begin_index);
-    if (newline_index != std::string::npos) {
-      // Keep remainder in input buffer for next call
-      input_buffer_ = buffer.substr(newline_index + 1);
+    auto pos = buffer.find("\r\n\r\n");
+    if (pos != std::string::npos) {
+      // Double newline indicates end of header
+      input.append(buffer.substr(0, pos));
+      return input;
       
-      // Cut of part after
-      buffer.resize(newline_index);
-      
-      return buffer;
+      // TODO: Preserve remainder to make it possible to call the function again
+    } else {
+      // Continue to receive and wait for end or double newline
+      input.append(buffer, read_size);
     }
-    
   }
 }
 
 
-void ClientConnection::sendResponseHeader(HttpResponseHeader& header)
+void ClientConnection::send(std::string& output)
 {
-  output_stream_ << header.statusCode << header.statusText << "\n";
+  auto write_size = write(connection_fd_, output.data(), output.size());
+  
+  if (write_size < 0) {
+    throw NetworkError(std::string("Error writing data to client socket: ") + std::strerror(errno));
+  } else if (write_size != output.size()) {
+    throw NetworkError(std::string("Wrong number of bytes written to client socket: ") + std::strerror(errno));
+  }
+}
+
+
+void ClientConnection::sendResponseHeader(HttpResponseHeader& header, std::vector<std::string>& additional_headers)
+{
+  std::ostringstream output_stream;
+  
+  output_stream << protocolVersion << " " << header.statusCode << " " << header.statusText << "\n";
+  for (std::string& header : additional_headers) {
+    output_stream << header << "\n";
+  }
   for (std::string& header : header.headers) {
-    output_stream_ << header << "\n";
+    output_stream << header << "\n";
   }
   
   // Second CTRL shows end of response header
-  output_stream_ << std::endl;
+  output_stream << "\n";
+  
+  auto output = output_stream.str();
+  send(output);
 }
 
 
 void ClientConnection::flushAndCloseConnection()
 {
-  output_stream_.flush();
   shutdown(connection_fd_, SHUT_RDWR);
   close(connection_fd_);
 }

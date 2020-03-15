@@ -17,6 +17,8 @@ struct HttpRequestHeader
   Method method;
   std::string path;
   std::vector<std::string> headers;
+  
+  operator std::string();
 };
 
 
@@ -25,13 +27,19 @@ struct HttpResponseHeader
   httpStatusCode statusCode;
   std::string statusText;
   std::vector<std::string> headers;
+  
+  operator std::string();
 };
 
 
 using HttpError = HttpResponseHeader;
 
 
+std::string httpMethodToString(HttpRequestHeader::Method method);
 HttpRequestHeader::Method httpMethodFromString(std::string& input);
+
+
+inline constexpr const char* protocolVersion = "HTTP/1.1";
 
 
 } // namespace webserver
