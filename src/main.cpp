@@ -1,18 +1,20 @@
 #include "ServerSocket.hpp"
+#include "FileHandler.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 
 int main(int argc, char* argv[])
-{
-  webserver::ServerSocket serverSocket;
-  
-  if (argc < 2)
+{ 
+  if (argc < 3)
   {
-    std::cerr << "Usage: " << argv[0] << " PORT" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " PORT BASE_PATH" << std::endl;
     return 1;
   }
+  
+  webserver::ServerSocket serverSocket;
+  webserver::FileHandler fileHandler(argv[2]);
   
   try {
     serverSocket.bindAndListen(std::stoi(argv[1]));
@@ -23,22 +25,8 @@ int main(int argc, char* argv[])
       try {
         auto requestHeader = clientConnection.readRequestHeader();
         
-        if (requestHeader.method == webserver::HttpRequestHeader::Method::Unknown) {
-          webserver::HttpResponseHeader errorHeader{501, "Not Implemented", {}};
-          clientConnection.sendEmptyResponse(errorHeader);
-        }
-        
-        webserver::HttpResponseHeader responseHeader;
-        
-        if (requestHeader.path == "/") {
-          // Handle request
-          responseHeader = webserver::HttpResponseHeader{200, "OK", {}};
-          std::string content = "Hello World!\n";
-          clientConnection.sendResponse(responseHeader, content);
-        } else {
-          responseHeader = webserver::HttpResponseHeader{404, "Not Found", {}};
-          clientConnection.sendEmptyResponse(responseHeader);
-        }
+        // Handle request
+        webserver::HttpResponseHeader responseHeader = fileHandler.handleRequest(clientConnection, requestHeader);
         
         // Print request and response to console
         std::cout << static_cast<std::string>(requestHeader) << " - " << static_cast<std::string>(responseHeader) << std::endl;
@@ -46,8 +34,10 @@ int main(int argc, char* argv[])
       } catch (webserver::HttpError& error) {
         std::cout << static_cast<std::string>(error) << std::endl;
         clientConnection.sendEmptyResponse(error);
+        
       } catch (webserver::ClientConnection::NetworkError& error) {
         std::cout << error.what() << std::endl;
+        
       }
     }
   } catch (webserver::ServerSocket::NetworkError& error) {

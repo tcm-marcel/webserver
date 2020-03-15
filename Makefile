@@ -1,6 +1,6 @@
 CC := clang++-9
-CFLAGS := -Wall -g --std=gnu++17 # -Werror -Wextra
-LDFLAGS := --std=gnu++17
+CFLAGS := -Wall -g --stdlib=libc++ --std=c++2a # -Werror -Wextra
+LDFLAGS := --stdlib=libc++ --std=c++2a
 TARGET := webserver
 
 SRCS := $(wildcard src/*.cpp)

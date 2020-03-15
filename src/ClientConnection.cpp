@@ -16,11 +16,13 @@ HttpRequestHeader ClientConnection::readRequestHeader()
   HttpRequestHeader header;
   std::string method;
   std::string protocolVersion;
+  std::string encodedPath;
   
   // Read Request Line
-  input_stream_ >> method >> header.path >> protocolVersion;
+  input_stream_ >> method >> encodedPath >> protocolVersion;
   
   header.method = httpMethodFromString(method);
+  header.path = urlDecode(encodedPath);
   
   if (header.method == HttpRequestHeader::Method::Unknown)
     throw HttpError{501, "Not Implemented", {}};
@@ -35,12 +37,23 @@ HttpRequestHeader ClientConnection::readRequestHeader()
 void ClientConnection::sendResponse(HttpResponseHeader& header, std::string& content)
 {
   std::vector<std::string> additional_headers{
-    "Content-Length: " + std::to_string(content.size()),
-    "Content-Type: text/plain"
+    "Content-Length: " + std::to_string(content.size())
   };
   
   sendResponseHeader(header, additional_headers);
   send(content);
+  flushAndCloseConnection();
+}
+
+
+void ClientConnection::sendResponse(HttpResponseHeader& header, int fd, size_t size)
+{
+  std::vector<std::string> additional_headers{
+    "Content-Length: " + std::to_string(size)
+  };
+  
+  sendResponseHeader(header, additional_headers);
+  send(fd, size);
   flushAndCloseConnection();
 }
 
@@ -94,6 +107,26 @@ void ClientConnection::send(std::string& output)
   } else if (write_size != output.size()) {
     throw NetworkError(std::string("Wrong number of bytes written to client socket: ") + std::strerror(errno));
   }
+}
+
+void ClientConnection::send(int fd, size_t size)
+{
+  size_t overall_read_size = 0;
+  const size_t buffer_size = 4096;
+  uint8_t buffer[buffer_size];
+  
+  do {
+    auto read_size = read(fd, buffer, buffer_size);
+    overall_read_size += read_size;
+    
+    auto write_size = write(connection_fd_, buffer, read_size);
+    
+    if (write_size < 0) {
+      throw NetworkError(std::string("Error writing data to client socket: ") + std::strerror(errno));
+    } else if (write_size != read_size) {
+      throw NetworkError(std::string("Wrong number of bytes written to client socket: ") + std::strerror(errno));
+    }
+  } while (overall_read_size < size);
 }
 
 

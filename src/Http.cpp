@@ -34,5 +34,25 @@ HttpResponseHeader::operator std::string()
 }
 
 
+std::string urlDecode(std::string& input)
+{
+  std::string output;
+  output.reserve(input.size());
+  
+  for (auto it = input.begin(); it < input.end(); ++it) {
+    char c = *it;
+    if (c == '%') {
+      char hex[3] = {*++it, *++it, '\0'};
+      auto ord = std::strtoul(hex, 0, 16);
+      output.push_back(static_cast<char>(ord));
+    } else {
+      output.push_back(c);
+    }
+  }
+  
+  return output;
+}
+
+
 } // namespace webserver
 

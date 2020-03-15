@@ -6,7 +6,6 @@
 #include <sstream>
 #include <iostream>
 #include <netinet/in.h>
-#include <ext/stdio_filebuf.h>
 
 
 namespace webserver {
@@ -27,6 +26,7 @@ public:
   
   HttpRequestHeader readRequestHeader();
   void sendResponse(HttpResponseHeader& header, std::string& content);
+  void sendResponse(HttpResponseHeader& header, int fd, size_t size);
   void sendEmptyResponse(HttpResponseHeader& header);
   
 private:
@@ -38,6 +38,7 @@ private:
   
   std::string receive() const;
   void send(std::string& output);
+  void send(int fd, size_t size);
   
   void sendResponseHeader(HttpResponseHeader& header, std::vector<std::string>& additional_headers);
   void flushAndCloseConnection();
