@@ -4,6 +4,8 @@
 
 #include <cerrno>
 #include <cstring>
+#include <sstream>
+#include <iostream>
 #include <unistd.h>
 
 
@@ -13,7 +15,7 @@ namespace webserver {
 HttpRequestHeader ClientConnection::readRequestHeader()
 {
   input_ = receive();
-  input_stream_ = std::istringstream(input_);
+  std::istringstream input_stream = std::istringstream(input_);
   
   HttpRequestHeader header;
   std::string method;
@@ -21,7 +23,7 @@ HttpRequestHeader ClientConnection::readRequestHeader()
   std::string encodedPath;
   
   // Read Request Line
-  input_stream_ >> method >> encodedPath >> protocolVersion;
+  input_stream >> method >> encodedPath >> protocolVersion;
   
   header.method = httpMethodFromString(method);
   header.path = urlDecode(encodedPath);

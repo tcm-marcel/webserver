@@ -5,8 +5,6 @@
 #include "Http.hpp"
 
 #include <string>
-#include <sstream>
-#include <iostream>
 #include <netinet/in.h>
 
 
@@ -36,7 +34,6 @@ private:
   socket_address client_address_;
   
   std::string input_;
-  std::istringstream input_stream_;
   
   std::string receive() const;
   void send(std::string& output);

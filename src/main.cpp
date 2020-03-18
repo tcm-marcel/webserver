@@ -3,6 +3,7 @@
 #include "ServerSocket.hpp"
 #include "FileHandler.hpp"
 
+#include <future>
 #include <iostream>
 #include <stdexcept>
 
@@ -23,24 +24,26 @@ int main(int argc, char* argv[])
     
     while(true) {
       auto clientConnection = serverSocket.accept();
-      
-      try {
-        auto requestHeader = clientConnection.readRequestHeader();
-        
-        // Handle request
-        webserver::HttpResponseHeader responseHeader = fileHandler.handleRequest(clientConnection, requestHeader);
-        
-        // Print request and response to console
-        std::cout << static_cast<std::string>(requestHeader) << " - " << static_cast<std::string>(responseHeader) << std::endl;
-        
-      } catch (webserver::HttpError& error) {
-        std::cout << static_cast<std::string>(error) << std::endl;
-        clientConnection.sendEmptyResponse(error);
-        
-      } catch (webserver::ClientConnection::NetworkError& error) {
-        std::cout << error.what() << std::endl;
-        
-      }
+
+      auto ignore = std::async(std::launch::async | std::launch::deferred, [&fileHandler] (webserver::ClientConnection clientConnection) {
+        try {
+          auto requestHeader = clientConnection.readRequestHeader();
+
+          // Handle request
+          webserver::HttpResponseHeader responseHeader = fileHandler.handleRequest(clientConnection, requestHeader);
+
+          // Print request and response to console
+          std::cout << static_cast<std::string>(requestHeader) << " - " << static_cast<std::string>(responseHeader) << std::endl;
+
+        } catch (webserver::HttpError& error) {
+          std::cout << static_cast<std::string>(error) << std::endl;
+          clientConnection.sendEmptyResponse(error);
+
+        } catch (webserver::ClientConnection::NetworkError& error) {
+          std::cout << error.what() << std::endl;
+
+        }
+      }, clientConnection);
     }
   } catch (webserver::ServerSocket::NetworkError& error) {
     std::cerr << error.what() << std::endl;

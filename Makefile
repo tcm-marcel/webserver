@@ -2,7 +2,7 @@
 
 CC := clang++-9
 CFLAGS := -Wall -g --stdlib=libc++ --std=c++2a # -Werror -Wextra
-LDFLAGS := --stdlib=libc++ --std=c++2a
+LDFLAGS := --stdlib=libc++ --std=c++2a -lpthread
 TARGET := webserver
 
 SRCS := $(wildcard src/*.cpp)
