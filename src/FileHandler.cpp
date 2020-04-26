@@ -96,10 +96,16 @@ std::string FileHandler::generateDirListing(Path& path)
   std::string html = "<html><head><title>Directory Listing</title></head><body><h1>" + stripBasePath(fs::canonical(path)) + "/</h1>";
   html += "<ul>";
   
+  if (path != basePath_)
+    html += "<li><a href=\"/\">..</a></li>";
+
   // TODO: urlEncode
-  for (auto& child : fs::directory_iterator(path)) {
-    auto child_path = child.path();
-    auto relative = stripBasePath(child_path);
+  std::vector<Path> children;
+  std::copy(fs::directory_iterator(path), fs::directory_iterator(), std::back_inserter(children));
+  std::sort(children.begin(), children.end());
+
+  for (auto& child : children) {
+    auto relative = stripBasePath(child);
     
     html += "<li><a href=\"" + relative + "\">" + relative + "</a></li>";
   }
