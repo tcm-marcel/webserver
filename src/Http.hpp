@@ -4,13 +4,15 @@
 
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
 namespace webserver {
 
 
-using httpStatusCode = unsigned int;
+using HttpStatusCode = unsigned int;
+using HttpHeaderFields = std::unordered_map<std::string, std::string>;
 
 
 struct HttpRequestHeader
@@ -18,7 +20,7 @@ struct HttpRequestHeader
   enum class Method {GET, HEAD, POST, Unknown};
   Method method;
   std::string path;
-  std::vector<std::string> headers;
+  HttpHeaderFields fields;
   
   operator std::string();
 };
@@ -26,9 +28,9 @@ struct HttpRequestHeader
 
 struct HttpResponseHeader
 {
-  httpStatusCode statusCode;
+  HttpStatusCode statusCode;
   std::string statusText;
-  std::vector<std::string> headers;
+  HttpHeaderFields fields;
   
   operator std::string();
 };
@@ -38,7 +40,7 @@ using HttpError = HttpResponseHeader;
 
 
 std::string httpMethodToString(HttpRequestHeader::Method method);
-HttpRequestHeader::Method httpMethodFromString(std::string& input);
+HttpRequestHeader::Method httpMethodFromString(const std::string& input);
 
 
 const std::vector<char> specialCharacters = {':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '='};

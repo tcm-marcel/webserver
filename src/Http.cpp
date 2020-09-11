@@ -6,7 +6,7 @@
 namespace webserver {
 
 
-HttpRequestHeader::Method httpMethodFromString(std::string& input)
+HttpRequestHeader::Method httpMethodFromString(const std::string& input)
 {
   if (input == "GET") return HttpRequestHeader::Method::GET;
   if (input == "HEAD") return HttpRequestHeader::Method::HEAD;

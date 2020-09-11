@@ -34,17 +34,26 @@ HttpRequestHeader ClientConnection::readRequestHeader()
   if (protocolVersion != protocolVersion)
     throw HttpError{505, "HTTP Version Not Supported", {}};
   
+  do
+  {
+    std::string name, value;
+    std::getline(input_stream, name, ':');
+    std::getline(input_stream, value);
+
+    // field names are ase insensitive
+    header.fields[toLowercase(name)] = value;
+  }
+  while (input_stream.good());
+
   return header;
 }
 
 
-void ClientConnection::sendResponse(HttpResponseHeader& header, std::string& content)
+void ClientConnection::sendResponse(HttpResponseHeader& header, const std::string& content)
 {
-  std::vector<std::string> additional_headers{
-    "Content-Length: " + std::to_string(content.size())
-  };
+  HttpHeaderFields additional_fields{{"Content-Length", std::to_string(content.size())}};
   
-  sendResponseHeader(header, additional_headers);
+  sendResponseHeader(header, additional_fields);
   send(content);
   flushAndCloseConnection();
 }
@@ -52,11 +61,9 @@ void ClientConnection::sendResponse(HttpResponseHeader& header, std::string& con
 
 void ClientConnection::sendResponse(HttpResponseHeader& header, int fd, size_t size)
 {
-  std::vector<std::string> additional_headers{
-    "Content-Length: " + std::to_string(size)
-  };
+  HttpHeaderFields additional_fields{{"Content-Length", std::to_string(size)}};
   
-  sendResponseHeader(header, additional_headers);
+  sendResponseHeader(header, additional_fields);
   send(fd, size);
   flushAndCloseConnection();
 }
@@ -64,9 +71,9 @@ void ClientConnection::sendResponse(HttpResponseHeader& header, int fd, size_t s
 
 void ClientConnection::sendEmptyResponse(HttpResponseHeader& header)
 {
-  std::vector<std::string> additional_headers{"Content-Length: 0"};
+  HttpHeaderFields additional_fields{{"Content-Length", "0"}};
   
-  sendResponseHeader(header, additional_headers);
+  sendResponseHeader(header, additional_fields);
   flushAndCloseConnection();
 }
 
@@ -102,7 +109,7 @@ std::string ClientConnection::receive() const
 }
 
 
-void ClientConnection::send(std::string& output)
+void ClientConnection::send(const std::string& output)
 {
   auto write_size = write(connection_fd_, output.data(), output.size());
   
@@ -134,16 +141,16 @@ void ClientConnection::send(int fd, size_t size)
 }
 
 
-void ClientConnection::sendResponseHeader(HttpResponseHeader& header, std::vector<std::string>& additional_headers)
+void ClientConnection::sendResponseHeader(HttpResponseHeader& header, HttpHeaderFields& additional_fields)
 {
   std::ostringstream output_stream;
   
   output_stream << protocolVersion << " " << header.statusCode << " " << header.statusText << "\n";
-  for (std::string& header : additional_headers) {
-    output_stream << header << "\n";
+  for (auto const& [key, value] : additional_fields) {
+    output_stream << key << ": " << value << "\n";
   }
-  for (std::string& header : header.headers) {
-    output_stream << header << "\n";
+  for (auto const& [key, value] : header.fields) {
+    output_stream << key << ": " << value << "\n";
   }
   
   // Second CTRL shows end of response header

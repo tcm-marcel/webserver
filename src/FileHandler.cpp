@@ -35,7 +35,7 @@ HttpResponseHeader FileHandler::handleRequest(ClientConnection& clientConnection
     
     // Add MIME type header
     auto mimeType = getMimeType(fullPath, fd);
-    responseHeader.headers.push_back("Content-Type: " + mimeType);
+    responseHeader.fields["Content-Type"] = mimeType;
     
     clientConnection.sendResponse(responseHeader, fd, fs::file_size(fullPath));
     
@@ -44,7 +44,7 @@ HttpResponseHeader FileHandler::handleRequest(ClientConnection& clientConnection
   } else {
     // Send directory listing
     auto listing = generateDirListing(fullPath);
-    responseHeader.headers.push_back("Content-Type: text/html");
+    responseHeader.fields["Content-Type"] = "text/html";
     
     clientConnection.sendResponse(responseHeader, listing);
     

@@ -25,7 +25,7 @@ public:
    : connection_fd_(connection_fd), client_address_(client_address) {}
   
   HttpRequestHeader readRequestHeader();
-  void sendResponse(HttpResponseHeader& header, std::string& content);
+  void sendResponse(HttpResponseHeader& header, const std::string& content);
   void sendResponse(HttpResponseHeader& header, int fd, size_t size);
   void sendEmptyResponse(HttpResponseHeader& header);
   
@@ -36,10 +36,10 @@ private:
   std::string input_;
   
   std::string receive() const;
-  void send(std::string& output);
+  void send(const std::string& output);
   void send(int fd, size_t size);
   
-  void sendResponseHeader(HttpResponseHeader& header, std::vector<std::string>& additional_headers);
+  void sendResponseHeader(HttpResponseHeader& header, HttpHeaderFields& additional_fields);
   void flushAndCloseConnection();
 };
 
