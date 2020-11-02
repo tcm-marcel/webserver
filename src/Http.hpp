@@ -43,9 +43,6 @@ std::string httpMethodToString(HttpRequestHeader::Method method);
 HttpRequestHeader::Method httpMethodFromString(const std::string& input);
 
 
-const std::vector<char> specialCharacters = {':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '='};
-std::string urlDecode(std::string& input);
-
 inline constexpr const char* protocolVersion = "HTTP/1.1";
 
 

@@ -1,6 +1,7 @@
 // (c) Marcel Kost 2020
 
 #include "ClientConnection.hpp"
+#include "Util.hpp"
 
 #include <cerrno>
 #include <cstring>
