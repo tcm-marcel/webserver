@@ -97,7 +97,7 @@ std::string FileHandler::generateDirListing(Path& path)
   html += "<ul>";
   
   if (path != basePath_)
-    html += "<li><a href=\"/\">..</a></li>";
+    html += "<li><a href=\"" + stripBasePath(path.parent_path()) + "\">..</a></li>";
 
   // TODO: urlEncode
   std::vector<Path> children;
