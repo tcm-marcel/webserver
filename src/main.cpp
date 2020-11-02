@@ -2,6 +2,7 @@
 
 #include "ServerSocket.hpp"
 #include "FileHandler.hpp"
+#include "AuthorizationHandler.hpp"
 
 #include <future>
 #include <iostream>
@@ -18,6 +19,9 @@ int main(int argc, char* argv[])
   
   webserver::ServerSocket serverSocket;
   webserver::FileHandler fileHandler(argv[2]);
+
+  std::function<webserver::AuthorizationHandler::RequestHandler> requestHandler = std::bind(&webserver::FileHandler::handleRequest, fileHandler, std::placeholders::_1, std::placeholders::_2);
+  webserver::AuthorizationHandler authorizationHandler("Password required", requestHandler, {"username", "password"});
   
   try {
     serverSocket.bindAndListen(std::stoi(argv[1]));
@@ -25,12 +29,13 @@ int main(int argc, char* argv[])
     while(true) {
       auto clientConnection = serverSocket.accept();
 
-      auto ignore = std::async(std::launch::async | std::launch::deferred, [&fileHandler] (webserver::ClientConnection clientConnection) {
+      auto ignore = std::async(std::launch::async | std::launch::deferred, [&fileHandler, &authorizationHandler] (webserver::ClientConnection clientConnection) {
         try {
           auto requestHeader = clientConnection.readRequestHeader();
 
           // Handle request
-          webserver::HttpResponseHeader responseHeader = fileHandler.handleRequest(clientConnection, requestHeader);
+          //webserver::HttpResponseHeader responseHeader = fileHandler.handleRequest(clientConnection, requestHeader);
+          webserver::HttpResponseHeader responseHeader = authorizationHandler.handleRequest(clientConnection, requestHeader);
 
           // Print request and response to console
           std::cout << static_cast<std::string>(requestHeader) << " - " << static_cast<std::string>(responseHeader) << std::endl;
