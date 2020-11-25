@@ -116,7 +116,7 @@ void ClientConnection::send(const std::string& output)
   
   if (write_size < 0) {
     throw NetworkError(std::string("Error writing data to client socket: ") + std::strerror(errno));
-  } else if (write_size != output.size()) {
+  } else if (static_cast<size_t>(write_size) != output.size()) {
     throw NetworkError(std::string("Wrong number of bytes written to client socket: ") + std::strerror(errno));
   }
 }
@@ -146,7 +146,7 @@ void ClientConnection::sendResponseHeader(HttpResponseHeader& header, HttpHeader
 {
   std::ostringstream output_stream;
   
-  output_stream << protocolVersion << " " << header.statusCode << " " << header.statusText << "\n";
+  output_stream << implementedProtocolVersion << " " << header.statusCode << " " << header.statusText << "\n";
   for (auto const& [key, value] : additional_fields) {
     output_stream << key << ": " << value << "\n";
   }

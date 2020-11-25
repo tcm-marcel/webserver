@@ -43,7 +43,7 @@ std::string httpMethodToString(HttpRequestHeader::Method method);
 HttpRequestHeader::Method httpMethodFromString(const std::string& input);
 
 
-inline constexpr const char* protocolVersion = "HTTP/1.1";
+inline constexpr const char* implementedProtocolVersion = "HTTP/1.1";
 
 
 } // namespace webserver

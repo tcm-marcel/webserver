@@ -22,7 +22,7 @@ public:
   using RequestHandler = HttpResponseHeader (ClientConnection& clientConnection, HttpRequestHeader& requestHeader);
 
   AuthorizationHandler(const std::string realm, std::function<RequestHandler> requestHandler, AuthenticationTuple authenticationTuple)
-   : realm_(realm), requestHandler_(requestHandler), authenticationTuple_(authenticationTuple) {};
+   : requestHandler_(requestHandler), authenticationTuple_(authenticationTuple), realm_(realm) {};
   HttpResponseHeader handleRequest(ClientConnection& clientConnection, HttpRequestHeader& requestHeader);
   
 private:

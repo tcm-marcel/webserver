@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     while(true) {
       auto clientConnection = serverSocket.accept();
 
-      auto ignore = std::async(std::launch::async | std::launch::deferred, [&fileHandler, &authorizationHandler] (webserver::ClientConnection clientConnection) {
+      auto ignore = std::async(std::launch::async | std::launch::deferred, [&authorizationHandler] (webserver::ClientConnection clientConnection) {
         try {
           auto requestHeader = clientConnection.readRequestHeader();
 
