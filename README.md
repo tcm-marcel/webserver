@@ -21,3 +21,13 @@ make tests -j 4
 # Run unit tests
 bin/unit_tests
 ```
+
+## Build configurations
+
+The Makefile supports a release mode and running different sanitizers. All of these options need a manual `make clean` beforehand. 
+
+```
+RELEASE=1 make tests -j 4
+SANITIZER=MEMORY make all -j 4
+SANITIZER=ADDRESS make all -j 4
+```
