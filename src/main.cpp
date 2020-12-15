@@ -2,7 +2,7 @@
 
 #include "ServerSocket.hpp"
 #include "FileHandler.hpp"
-#include "AuthorizationHandler.hpp"
+#include "SimpleAuthorizationHandler.hpp"
 
 #include <future>
 #include <iostream>
@@ -20,8 +20,8 @@ int main(int argc, char* argv[])
   webserver::ServerSocket serverSocket;
   webserver::FileHandler fileHandler(argv[2]);
 
-  std::function<webserver::AuthorizationHandler::RequestHandler> requestHandler = std::bind(&webserver::FileHandler::handleRequest, fileHandler, std::placeholders::_1, std::placeholders::_2);
-  webserver::AuthorizationHandler authorizationHandler("Password required", requestHandler, {"username", "password"});
+  std::function<webserver::SimpleAuthorizationHandler::RequestHandler> requestHandler = std::bind(&webserver::FileHandler::handleRequest, fileHandler, std::placeholders::_1, std::placeholders::_2);
+  webserver::SimpleAuthorizationHandler authorizationHandler("Password required", requestHandler, {"username", "password"});
   
   try {
     serverSocket.bindAndListen(std::stoi(argv[1]));

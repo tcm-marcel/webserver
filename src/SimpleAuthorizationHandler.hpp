@@ -4,30 +4,26 @@
 
 #include "Http.hpp"
 #include "ClientConnection.hpp"
+#include "Authorization.hpp"
 
 #include <string>
 
 
 namespace webserver {
 
-struct AuthenticationTuple
-{
-  std::string username;
-  std::string password;
-};
 
-class AuthorizationHandler
+class SimpleAuthorizationHandler
 {
 public:
   using RequestHandler = HttpResponseHeader (ClientConnection& clientConnection, HttpRequestHeader& requestHeader);
 
-  AuthorizationHandler(const std::string realm, std::function<RequestHandler> requestHandler, AuthenticationTuple authenticationTuple)
+  SimpleAuthorizationHandler(const std::string realm, std::function<RequestHandler> requestHandler, authorization::AuthenticationTuple authenticationTuple)
    : requestHandler_(requestHandler), authenticationTuple_(authenticationTuple), realm_(realm) {};
   HttpResponseHeader handleRequest(ClientConnection& clientConnection, HttpRequestHeader& requestHeader);
   
 private:
   std::function<RequestHandler> requestHandler_; 
-  AuthenticationTuple authenticationTuple_;
+  authorization::AuthenticationTuple authenticationTuple_;
   const std::string realm_;
 };
 
