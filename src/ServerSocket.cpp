@@ -43,7 +43,7 @@ void ServerSocket::bindAndListen(int port)
 	// Simple Dispatcher, allow queue length of 5
 	listen(socket_fd_, 5);
 	
-	std::cout << "Listening on port " << port << std::endl;
+	std::cout << "Listening on port " << port << " (http://localhost:" << port << ")" << std::endl;
 }
 
 

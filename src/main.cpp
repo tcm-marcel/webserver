@@ -11,9 +11,9 @@
 
 int main(int argc, char* argv[])
 { 
-  if (argc < 3)
+  if (argc < 5)
   {
-    std::cerr << "Usage: " << argv[0] << " PORT BASE_PATH" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " PORT BASE_PATH USERNAME PASSWORD" << std::endl;
     return 1;
   }
   
@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
   webserver::FileHandler fileHandler(argv[2]);
 
   std::function<webserver::SimpleAuthorizationHandler::RequestHandler> requestHandler = std::bind(&webserver::FileHandler::handleRequest, fileHandler, std::placeholders::_1, std::placeholders::_2);
-  webserver::SimpleAuthorizationHandler authorizationHandler("Password required", requestHandler, {"username", "password"});
+  webserver::SimpleAuthorizationHandler authorizationHandler("Password required", requestHandler, {argv[3], argv[4]});
   
   try {
     serverSocket.bindAndListen(std::stoi(argv[1]));
